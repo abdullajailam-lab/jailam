@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GEMS Milandhoo School — Teacher Portal</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
+    color: #222;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: #004466; /* Dark teal/navy */
+    color: #fff;
+    padding: 1rem 2rem;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+  }
+
+  nav {
+    display: flex;
+    background: #01796f; /* Teal */
+    color: white;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  nav button {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 0.85rem 1.4rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.25s ease;
+  }
+  nav button:hover, nav button.active {
+    background: #014d40;
+    border-radius: 5px;
+  }
+  nav button:focus {
+    outline: 3px solid #80cbc4;
+    outline-offset: 2px;
+  }
+
+  main {
+    flex-grow: 1;
+    padding: 1.5rem 2rem;
+  }
+
+  section {
+    display: none;
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    max-width: 900px;
+    margin: 1rem auto 2rem;
+  }
+  section.active {
+    display: block;
+  }
+  h2 {
+    margin-top: 0;
+    font-weight: 700;
+    color: #004466;
+    margin-bottom: 1rem;
+  }
+
+  /* Dashboard styling */
+  #dashboard {
+    background: #e6f2ff;
+  }
+  #dashboard .stats {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+  }
+  #dashboard .stats div {
+    background: #007acc;
+    color: white;
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    flex: 1 1 160px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgb(0 122 204 / 0.3);
+  }
+  #dashboard .stats div span.number {
+    display: block;
+    font-size: 2.4rem;
+    font-weight: 900;
+    margin-bottom: 0.3rem;
+  }
+  #dashboard .stats div span.label {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  /* Students section */
+  #students {
+    background: #e8f5e9; /* light green */
+  }
+  #students form {
+    max-width: 600px;
+    margin-bottom: 1.5rem;
+  }
+  #students label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+  #students input {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    margin-bottom: 1rem;
+    border: 1.5px solid #4caf50;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  #students button {
+    background: #4caf50;
+    color: white;
+    border: none;
+    font-weight: 700;
+    padding: 0.7rem 1.6rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #students button:hover {
+    background: #388e3c;
+  }
+  #studentList {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #studentList th, #studentList td {
+    border: 1px solid #a5d6a7;
+    padding: 0.7rem 1rem;
+    text-align: left;
+  }
+  #studentList th {
+    background: #4caf50;
+    color: white;
+  }
+
+  /* Attendance section */
+  #attendance {
+    background: #fff3e0; /* light orange */
+  }
+  #attendance label, #meetingForm label, #lessonForm label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  #attendance input[type="date"] {
+    padding: 0.5rem 0.8rem;
+    font-size: 1rem;
+    border: 1.5px solid #f57c00;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+  }
+  #studentsAttendanceList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+  #studentsAttendanceList button {
+    flex: 1 1 120px;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    color: white;
+    transition: background-color 0.25s ease;
+    user-select: none;
+  }
+  #studentsAttendanceList button.present {
+    background: #43a047;
+  }
+  #studentsAttendanceList button.absent {
+    background: #e53935;
+  }
+  #studentsAttendanceList button.holiday {
+    background: #f9a825;
+  }
+  #attendance button {
+    margin-top: 1rem;
+    background: #f57c00;
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #attendance button:hover {
+    background: #ef6c00;
+  }
+
+  /* Meeting Minutes */
+  #meetings {
+    background: #ede7f6; /* light purple */
+  }
+  #meetings form, #lessons form {
+    max-width: 600px;
+    margin-bottom: 1.5rem;
+  }
+  #meetings input, #meetings textarea, #lessons input, #lessons textarea {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    font-size: 1rem;
+    border: 1.5px solid #673ab7;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+  }
+  #meetings button, #lessons button {
+    background: #673ab7;
+    color: white;
+    border: none;
+    padding: 0.7rem 2rem;
+    border-radius: 5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #meetings button:hover, #lessons button:hover {
+    background: #512da8;
+  }
+  #meetings table, #lessons table, #performanceTable {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #meetings th, #meetings td, #lessons th, #lessons td, #performanceTable th, #performanceTable td {
+    border: 1px solid #b39ddb;
+    padding: 0.6rem 1rem;
+    text-align: left;
+  }
+  #meetings th, #lessons th, #performanceTable th {
+    background: #673ab7;
+    color: white;
+  }
+
+  /* Lesson Plans */
+  #lessons {
+    background: #e1f5fe; /* light blue */
+  }
+  #lessons label, #lessons input, #lessons textarea {
+    font-weight: 600;
+  }
+  #lessons input, #lessons textarea {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Performance */
+  #performance {
+    background: #f3e5f5; /* light lavender */
+  }
+  #performanceTable th, #performanceTable td {
+    border: 1px solid #ce93d8;
+    padding: 0.6rem 1rem;
+  }
+  #performanceTable th {
+    background: #9c27b0;
+    color: white;
+  }
+
+  /* Logout button */
+  #logoutBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #004466;
+    color: white;
+    border: none;
+    padding: 0.7rem 1.3rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 3px 8px rgb(0 68 102 / 0.7);
+    transition: background-color 0.3s ease;
+  }
+  #logoutBtn:hover {
+    background: #002933;
+  }
+
+  /* Login/Register Overlay */
+  #authOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, #004466, #01796f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  #authContainer {
+    background: white;
+    max-width: 420px;
+    width: 90%;
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  #authTitle {
+    color: #004466;
+    font-size: 1.9rem;
+    font-weight: 900;
+    margin-bottom: 1.4rem;
+  }
+  .auth-switch {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.8rem;
+    gap: 1rem;
+  }
+  .auth-switch button {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #01796f;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  .auth-switch button.active, .auth-switch button:hover {
+    background: #004466;
+  }
+  form#loginForm input,
+  form#registerForm input {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    margin: 0.6rem 0 1.3rem;
+    border: 2px solid #01796f;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  form#loginForm button,
+  form#registerForm button {
+    background: #004466;
+    color: white;
+    border: none;
+    padding: 0.9rem 1.8rem;
+    font-weight: 900;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  form#loginForm button:hover,
+  form#registerForm button:hover {
+    background: #01334d;
+  }
+  #loginError, #registerError {
+    color: #e53935;
+    min-height: 1.2rem;
+    font-weight: 700;
+    margin-top: -0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Accessibility focus outlines */
+  button:focus, input:focus, select:focus, textarea:focus {
+    outline: 3px solid #80cbc4;
+    outline-offset: 2px;
+  }
+
+  /* Responsive tweaks */
+  @media (max-width: 640px) {
+    nav {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    nav button {
+      flex: 1 1 45%;
+      margin: 0.25rem 0;
+    }
+    #students form, #meetings form, #lessons form {
+      padding: 0 0.5rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  GEMS Milandhoo School — Teacher Portal
+</header>
+
+<nav role="tablist" aria-label="Primary navigation">
+  <button id="tabDashboard" role="tab" aria-selected="true" tabindex="0" class="active">Dashboard</button>
+  <button id="tabStudents" role="tab" aria-selected="false" tabindex="-1">Students</button>
+  <button id="tabAttendance" role="tab" aria-selected="false" tabindex="-1">Attendance</button>
+  <button id="tabMeetings" role="tab" aria-selected="false" tabindex="-1">Meeting Minutes</button>
+  <button id="tabLessons" role="tab" aria-selected="false" tabindex="-1">Lesson Plans</button>
+  <button id="tabPerformance" role="tab" aria-selected="false" tabindex="-1">Overall Performance</button>
+</nav>
+
+<main>
+  <!-- Dashboard -->
+  <section id="dashboard" role="tabpanel" tabindex="0" aria-label="Dashboard section" class="active">
+    <h2>Dashboard Overview</h2>
+    <div class="stats" aria-live="polite" aria-atomic="true">
+      <div>
+        <span class="number" id="totalStudents">0</span>
+        <span class="label">Total Students</span>
+      </div>
+      <div>
+        <span class="number" id="averageAttendance">0%</span>
+        <span class="label">Average Attendance</span>
+      </div>
+      <div>
+        <span class="number" id="totalMeetings">0</span>
+        <span class="label">Total Meetings</span>
+      </div>
+      <div>
+        <span class="number" id="averageReading">N/A</span>
+        <span class="label">Average Reading Level</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Students Management -->
+  <section id="students" role="tabpanel" tabindex="0" aria-label="Students management section">
+    <h2>Students Management</h2>
+    <form id="addStudentForm" aria-label="Add new student form">
+      <label for="studentName">Name</label>
+      <input id="studentName" name="studentName" type="text" placeholder="Student full name" required />
+
+      <label for="studentAge">Age</label>
+      <input id="studentAge" name="studentAge" type="number" min="3" max="30" placeholder="Age" required />
+
+      <label for="studentGrade">Grade</label>
+      <input id="studentGrade" name="studentGrade" type="text" placeholder="Grade (e.g., 5A)" required />
+
+      <label for="studentLevel">Reading Level</label>
+      <input id="studentLevel" name="studentLevel" type="text" placeholder="e.g., Beginner, Intermediate" required />
+
+      <button type="submit">Add Student</button>
+    </form>
+    <table id="studentList" aria-label="List of students">
+      <thead>
+        <tr>
+          <th>Name</th><th>Age</th><th>Grade</th><th>Reading Level</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Attendance -->
+  <section id="attendance" role="tabpanel" tabindex="0" aria-label="Attendance section">
+    <h2>Attendance (Daily Status)</h2>
+    <label for="attendanceDate">Select Date</label>
+    <input type="date" id="attendanceDate" name="attendanceDate" required />
+
+    <div id="studentsAttendanceList" aria-label="Students attendance status list" role="list"></div>
+
+    <button id="saveAttendanceBtn" aria-label="Save attendance">Save Attendance</button>
+    <button id="exportAttendanceBtn" aria-label="Export attendance to PDF">Export Attendance PDF</button>
+  </section>
+
+  <!-- Meeting Minutes -->
+  <section id="meetings" role="tabpanel" tabindex="0" aria-label="Meeting minutes section">
+    <h2>Meeting Minutes</h2>
+    <form id="meetingForm" aria-label="Add meeting minutes form">
+      <label for="meetingDate">Date</label>
+      <input type="date" id="meetingDate" name="meetingDate" required />
+
+      <label for="meetingTitle">Title</label>
+      <input type="text" id="meetingTitle" name="meetingTitle" placeholder="Meeting title" required />
+
+      <label for="meetingNotes">Notes</label>
+      <textarea id="meetingNotes" name="meetingNotes" placeholder="Detailed meeting notes" required rows="5"></textarea>
+
+      <label for="meetingParticipants">Participants</label>
+      <textarea id="meetingParticipants" name="meetingParticipants" placeholder="Enter participants names (optional)" rows="2"></textarea>
+
+      <button type="submit">Add Meeting</button>
+    </form>
+
+    <table id="meetingsTable" aria-label="Meeting minutes list">
+      <thead>
+        <tr><th>Date</th><th>Title</th><th>Notes</th><th>Participants</th></tr>
+      </thead>
+      <tbody id="meetingsBody"></tbody>
+    </table>
+    <button id="exportMeetingsBtn" aria-label="Export meeting minutes to PDF">Export Meetings PDF</button>
+  </section>
+
+  <!-- Lesson Plans -->
+  <section id="lessons" role="tabpanel" tabindex="0" aria-label="Lesson plans section">
+    <h2>Lesson Plans</h2>
+    <form id="lessonForm" aria-label="Add lesson plan form">
+      <label for="lessonDate">Date</label>
+      <input type="date" id="lessonDate" name="lessonDate" required />
+
+      <label for="lessonSubject">Subject</label>
+      <input type="text" id="lessonSubject" name="lessonSubject" placeholder="Subject name" required />
+
+      <label for="lessonDetails">Details</label>
+      <textarea id="lessonDetails" name="lessonDetails" placeholder="Lesson details" required rows="5"></textarea>
+
+      <button type="submit">Add Lesson Plan</button>
+    </form>
+
+    <table id="lessonsTable" aria-label="Lesson plans list">
+      <thead>
+        <tr><th>Date</th><th>Subject</th><th>Details</th></tr>
+      </thead>
+      <tbody id="lessonsBody"></tbody>
+    </table>
+    <button id="exportLessonsBtn" aria-label="Export lesson plans to PDF">Export Lessons PDF</button>
+  </section>
+
+  <!-- Overall Performance -->
+  <section id="performance" role="tabpanel" tabindex="0" aria-label="Overall performance section">
+    <h2>Overall Performance</h2>
+    <table id="performanceTable" aria-label="Performance summary table">
+      <thead>
+        <tr>
+          <th>Student</th><th>Attendance %</th><th>Reading Level</th><th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="performanceBody"></tbody>
+    </table>
+  </section>
+</main>
+
+<button id="logoutBtn" hidden aria-label="Logout">Logout</button>
+
+<!-- Login/Register Overlay -->
+<div id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div id="authContainer">
+    <h1 id="authTitle">Welcome to GEMS Milandhoo School Portal</h1>
+    <div class="auth-switch" role="tablist" aria-label="Authentication mode toggle">
+      <button id="loginTab" role="tab" aria-selected="true" tabindex="0" class="active">Login</button>
+      <button id="registerTab" role="tab" aria-selected="false" tabindex="-1">Register</button>
+    </div>
+
+    <form id="loginForm" aria-label="Login form">
+      <input type="text" id="loginUsername" placeholder="Username" autocomplete="username" required />
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required />
+      <div id="loginError" aria-live="assertive"></div>
+      <button type="submit">Login</button>
+    </form>
+
+    <form id="registerForm" aria-label="Register form" hidden>
+      <input type="text" id="registerUsername" placeholder="Choose Username" autocomplete="username" required />
+      <input type="password" id="registerPassword" placeholder="Choose Password" autocomplete="new-password" required />
+      <input type="password" id="registerPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password" required />
+      <div id="registerError" aria-live="assertive"></div>
+      <button type="submit">Register</button>
+    </form>
+  </div>
+</div>
+
+<!-- jsPDF CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+(() => {
+  // Data stores
+  const students = [];
+  const attendanceRecords = {};
+  const meetings = [];
+  const lessons = [];
+  const users = []; // simple user store for auth
+
+  // Cached DOM elements
+  const navButtons = document.querySelectorAll('nav button');
+  const sections = document.querySelectorAll('main section');
+
+  // Auth overlay elements
+  const authOverlay = document.getElementById('authOverlay');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const loginTab = document.getElementById('loginTab');
+  const registerTab = document.getElementById('registerTab');
+  const loginError = document.getElementById('loginError');
+  const registerError = document.getElementById('registerError');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  // Other elements
+  const studentListBody = document.querySelector('#studentList tbody');
+  const attendanceDateInput = document.getElementById('attendanceDate');
+  const studentsAttendanceList = document.getElementById('studentsAttendanceList');
+  const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
+  const exportAttendanceBtn = document.getElementById('exportAttendanceBtn');
+
+  const meetingForm = document.getElementById('meetingForm');
+  const meetingsBody = document.getElementById('meetingsBody');
+  const exportMeetingsBtn = document.getElementById('exportMeetingsBtn');
+
+  const lessonForm = document.getElementById('lessonForm');
+  const lessonsBody = document.getElementById('lessonsBody');
+  const exportLessonsBtn = document.getElementById('exportLessonsBtn');
+
+  const performanceBody = document.getElementById('performanceBody');
+
+  // Dashboard elements
+  const totalStudentsEl = document.getElementById('totalStudents');
+  const averageAttendanceEl = document.getElementById('averageAttendance');
+  const totalMeetingsEl = document.getElementById('totalMeetings');
+  const averageReadingEl = document.getElementById('averageReading');
+
+  // --- Helper functions ---
+  function switchTab(newTabId) {
+    navButtons.forEach(btn => {
+      if (btn.id === newTabId) {
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        btn.tabIndex = 0;
+      } else {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+        btn.tabIndex = -1;
+      }
+    });
+    sections.forEach(sec => {
+      if (sec.id === newTabId.replace('tab', '').toLowerCase()) {
+        sec.classList.add('active');
+        sec.focus();
+      } else {
+        sec.classList.remove('active');
+      }
+    });
+  }
+
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.id));
+  });
+
+  // --- Authentication ---
+
+  // Simple user store functions
+  function findUser(username) {
+    return users.find(u => u.username.toLowerCase() === username.toLowerCase());
+  }
+  function registerUser(username, password) {
+    if (findUser(username)) return false;
+    users.push({ username, password });
+    return true;
+  }
+  function loginUser(username, password) {
+    const user = findUser(username);
+    return user && user.password === password;
+  }
+
+  loginTab.addEventListener('click', () => {
+    loginTab.classList.add('active');
+    registerTab.classList.remove('active');
+    loginTab.setAttribute('aria-selected', 'true');
+    registerTab.setAttribute('aria-selected', 'false');
+    loginTab.tabIndex = 0;
+    registerTab.tabIndex = -1;
+    loginForm.hidden = false;
+    registerForm.hidden = true;
+    loginError.textContent = '';
+    registerError.textContent = '';
+  });
+  registerTab.addEventListener('click', () => {
+    registerTab.classList.add('active');
+    loginTab.classList.remove('active');
+    registerTab.setAttribute('aria-selected', 'true');
+    loginTab.setAttribute('aria-selected', 'false');
+    registerTab.tabIndex = 0;
+    loginTab.tabIndex = -1;
+    registerForm.hidden = false;
+    loginForm.hidden = true;
+    loginError.textContent = '';
+    registerError.textContent = '';
+  });
+
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (loginUser(username, password)) {
+      authOverlay.style.display = 'none';
+      logoutBtn.hidden = false;
+      switchTab('tabDashboard');
+      updateDashboardStats();
+    } else {
+      loginError.textContent = 'Invalid username or password.';
+    }
+  });
+
+  registerForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const username = document.getElementById('registerUsername').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+    if (password !== passwordConfirm) {
+      registerError.textContent = 'Passwords do not match.';
+      return;
+    }
+    if (!registerUser(username, password)) {
+      registerError.textContent = 'Username already exists.';
+      return;
+    }
+    alert('Registration successful! Please login.');
+    loginTab.click();
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    authOverlay.style.display = 'flex';
+    logoutBtn.hidden = true;
+  });
+
+  // --- Students Management ---
+  function renderStudents() {
+    studentListBody.innerHTML = '';
+    students.forEach(s => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${s.name}</td><td>${s.age}</td><td>${s.grade}</td><td>${s.level}</td>
+      `;
+      studentListBody.appendChild(tr);
+    });
+  }
+  document.getElementById('addStudentForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = e.target.studentName.value.trim();
+    const age = e.target.studentAge.value.trim();
+    const grade = e.target.studentGrade.value.trim();
+    const level = e.target.studentLevel.value.trim();
+    if (!name || !age || !grade || !level) return alert('All fields are required');
+    students.push({ id: Date.now().toString(), name, age, grade, level });
+    e.target.reset();
+    renderStudents();
+    updateDashboardStats();
+    renderAttendanceList();
+    updatePerformanceTable();
+  });
+
+  // --- Attendance ---
+  function renderAttendanceList() {
+    studentsAttendanceList.innerHTML = '';
+    if (!students.length) {
+      studentsAttendanceList.textContent = 'No students added yet.';
+      return;
+    }
+    students.forEach(s => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = `${s.name}: Absent`;
+      btn.className = 'absent';
+      btn.setAttribute('aria-pressed', 'false');
+      btn.setAttribute('role', 'listitem');
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('absent')) {
+          btn.className = 'present';
+          btn.textContent = `${s.name}: Present`;
+          btn.setAttribute('aria-pressed', 'true');
+        } else if (btn.classList.contains('present')) {
+          btn.className = 'holiday';
+          btn.textContent = `${s.name}: Holiday`;
+          btn.setAttribute('aria-pressed', 'mixed');
+        } else {
+          btn.className = 'absent';
+          btn.textContent = `${s.name}: Absent`;
+          btn.setAttribute('aria-pressed', 'false');
+        }
+      });
+      studentsAttendanceList.appendChild(btn);
+    });
+  }
+
+  attendanceDateInput.addEventListener('change', () => {
+    const date = attendanceDateInput.value;
+    if (!date) return;
+    if (attendanceRecords[date]) {
+      // Load existing attendance for date
+      const dayRec = attendanceRecords[date];
+      Array.from(studentsAttendanceList.children).forEach(btn => {
+        const name = btn.textContent.split(':')[0];
+        const student = students.find(s => s.name === name);
+        const status = dayRec[student.id] || 'Absent';
+        btn.className = status.toLowerCase();
+        btn.textContent = `${name}: ${capitalize(status)}`;
+        btn.setAttribute('aria-pressed', status === 'Present' ? 'true' : status === 'Holiday' ? 'mixed' : 'false');
+      });
+    } else {
+      // Reset all to Absent
+      Array.from(studentsAttendanceList.children).forEach(btn => {
+        const name = btn.textContent.split(':')[0];
+        btn.className = 'absent';
+        btn.textContent = `${name}: Absent`;
+        btn.setAttribute('aria-pressed', 'false');
+      });
+    }
+  });
+
+  saveAttendanceBtn.addEventListener('click', () => {
+    const date = attendanceDateInput.value;
+    if (!date) return alert('Please select a date.');
+    if (!students.length) return alert('No students to mark attendance.');
+    const dayRec = {};
+    Array.from(studentsAttendanceList.children).forEach(btn => {
+      const name = btn.textContent.split(':')[0];
+      const student = students.find(s => s.name === name);
+      let status = 'Absent';
+      if (btn.classList.contains('present')) status = 'Present';
+      else if (btn.classList.contains('holiday')) status = 'Holiday';
+      dayRec[student.id] = status;
+    });
+    attendanceRecords[date] = dayRec;
+    alert('Attendance saved.');
+    updateDashboardStats();
+    updatePerformanceTable();
+  });
+
+  // --- Meeting Minutes ---
+  meetingForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const date = meetingForm.meetingDate.value;
+    const title = meetingForm.meetingTitle.value.trim();
+    const notes = meetingForm.meetingNotes.value.trim();
+    const participants = meetingForm.meetingParticipants.value.trim();
+    if (!date || !title || !notes) return alert('Date, Title and Notes are required.');
+    meetings.push({ id: Date.now().toString(), date, title, notes, participants });
+    meetingForm.reset();
+    renderMeetings();
+    updateDashboardStats();
+  });
+
+  function renderMeetings() {
+    meetingsBody.innerHTML = '';
+    meetings.forEach(m => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${m.date}</td><td>${escapeHtml(m.title)}</td><td>${escapeHtml(m.notes)}</td><td>${escapeHtml(m.participants)}</td>
+      `;
+      meetingsBody.appendChild(tr);
+    });
+  }
+
+  // --- Lesson Plans ---
+  lessonForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const date = lessonForm.lessonDate.value;
+    const subject = lessonForm.lessonSubject.value.trim();
+    const details = lessonForm.lessonDetails.value.trim();
+    if (!date || !subject || !details) return alert('Date, Subject and Details are required.');
+    lessons.push({ id: Date.now().toString(), date, subject, details });
+    lessonForm.reset();
+    renderLessons();
+  });
+
+  function renderLessons() {
+    lessonsBody.innerHTML = '';
+    lessons.forEach(l => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${l.date}</td><td>${escapeHtml(l.subject)}</td><td>${escapeHtml(l.details)}</td>
+      `;
+      lessonsBody.appendChild(tr);
+    });
+  }
+
+  // --- Performance ---
+  function updatePerformanceTable() {
+    performanceBody.innerHTML = '';
+    students.forEach(s => {
+      const attendancePercent = calculateAttendancePercent(s.id);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${s.name}</td><td>${attendancePercent.toFixed(0)}%</td><td>${escapeHtml(s.level)}</td><td>${generateRemarks(attendancePercent)}</td>
+      `;
+      performanceBody.appendChild(tr);
+    });
+  }
+  function calculateAttendancePercent(studentId) {
+    const dates = Object.keys(attendanceRecords);
+    if (!dates.length) return 0;
+    let presentCount = 0;
+    let totalCount = 0;
+    for (const d of dates) {
+      const dayRec = attendanceRecords[d];
+      if (dayRec && dayRec[studentId]) {
+        totalCount++;
+        if (dayRec[studentId].toLowerCase() === 'present') presentCount++;
+      }
+    }
+    return totalCount === 0 ? 0 : (presentCount / totalCount) * 100;
+  }
+  function generateRemarks(attPercent) {
+    if (attPercent >= 90) return 'Excellent attendance';
+    if (attPercent >= 75) return 'Good attendance';
+    if (attPercent >= 50) return 'Average attendance';
+    return 'Needs improvement';
+  }
+
+  // --- Dashboard stats update ---
+  function updateDashboardStats() {
+    totalStudentsEl.textContent = students.length;
+    totalMeetingsEl.textContent = meetings.length;
+
+    // Average attendance
+    if (students.length && Object.keys(attendanceRecords).length) {
+      let totalPercent = 0;
+      students.forEach(s => {
+        totalPercent += calculateAttendancePercent(s.id);
+      });
+      averageAttendanceEl.textContent = (totalPercent / students.length).toFixed(0) + '%';
+    } else {
+      averageAttendanceEl.textContent = '0%';
+    }
+
+    // Average reading level length (simple metric)
+    if (students.length) {
+      const totalLen = students.reduce((acc, s) => acc + s.level.length, 0);
+      averageReadingEl.textContent = (totalLen / students.length).toFixed(1);
+    } else {
+      averageReadingEl.textContent = 'N/A';
+    }
+  }
+
+  // --- Export helpers using jsPDF ---
+  function exportTableToPDF(title, tableId) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text(title, 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    const dateStr = new Date().toLocaleString();
+    doc.text(`Generated on: ${dateStr}`, 14, 30);
+
+    doc.autoTable({
+      html: `#${tableId}`,
+      startY: 35,
+      theme: 'striped',
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [3, 169, 244] }
+    });
+    doc.save(title.replace(/\s+/g, '_').toLowerCase() + '.pdf');
+  }
+
+  exportAttendanceBtn.addEventListener('click', () => {
+    if (!students.length) return alert('No students to export attendance.');
+    if (!Object.keys(attendanceRecords).length) return alert('No attendance records to export.');
+    exportAttendanceReportPDF();
+  });
+  exportMeetingsBtn.addEventListener('click', () => {
+    if (!meetings.length) return alert('No meeting minutes to export.');
+    exportTableToPDF('Meeting Minutes', 'meetingsTable');
+  });
+  exportLessonsBtn.addEventListener('click', () => {
+    if (!lessons.length) return alert('No lesson plans to export.');
+    exportTableToPDF('Lesson Plans', 'lessonsTable');
+  });
+
+  function exportAttendanceReportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Attendance Report', 14, 22);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    // Prepare data for table: date | student1 | student2 | ...
+    const dates = Object.keys(attendanceRecords).sort();
+    const headers = ['Date', ...students.map(s => s.name)];
+    const body = dates.map(date => {
+      const dayRec = attendanceRecords[date];
+      return [date, ...students.map(s => {
+        const status = dayRec[s.id] || 'Absent';
+        return status.charAt(0).toUpperCase() + status.slice(1);
+      })];
+    });
+
+    doc.autoTable({
+      head: [headers],
+      body: body,
+      startY: 35,
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [245, 124, 0] }
+    });
+    doc.save('attendance_report.pdf');
+  }
+
+  // --- Utility ---
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m]);
+  }
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  // --- Initialization ---
+  function init() {
+    // Initially render students list empty
+    renderStudents();
+    renderAttendanceList();
+    renderMeetings();
+    renderLessons();
+    updatePerformanceTable();
+    updateDashboardStats();
+    attendanceDateInput.valueAsDate = new Date();
+
+    // Hide main content until login
+    authOverlay.style.display = 'flex';
+    logoutBtn.hidden = true;
+  }
+  init();
+})();
+</script>
+
+</body>
+</html>
