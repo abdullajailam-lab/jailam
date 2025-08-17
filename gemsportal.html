@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GEMS Milandhoo School Portal — Pro</title>
+
+<!-- CDNs -->
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+:root{
+  --sidebar-a:#06283d; --sidebar-b:#0aa3a3; --accent:#ffd166;
+  --card:#ffffff; --muted:#6b7c93; --success:#2ea44f; --danger:#ef5350;
+  --radius:12px; --shadow:0 10px 30px rgba(2,6,23,0.12);
+  --input-text:#000; --ink:#072031; --bg:#eef6f9;
+}
+*{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+
+/* App shell */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{
+  width:280px;padding:22px;background:linear-gradient(180deg,var(--sidebar-a),var(--sidebar-b));
+  color:#fff;display:flex;flex-direction:column;gap:18px;box-shadow:var(--shadow)
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center}
+.brand h1{margin:0;font-size:18px;font-weight:800}
+.nav{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.nav button{background:transparent;border:none;color:#e9fbfb;padding:12px;border-radius:10px;text-align:left;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s}
+.nav button:hover{background:rgba(255,255,255,0.06);transform:translateX(6px)}
+
+.main{flex:1;padding:20px;overflow:auto}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.title{font-weight:800;font-size:20px;color:#072031}
+.header .note{color:var(--muted)}
+
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.card{background:var(--card);padding:14px;border-radius:var(--radius);box-shadow:var(--shadow);min-width:160px}
+.big{font-size:20px;font-weight:900;color:#052235}
+.small-note{font-size:13px;color:var(--muted)}
+
+/* panels & forms */
+.panel{background:#fff;padding:14px;border-radius:12px;box-shadow:var(--shadow);margin-bottom:14px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type="text"], input[type="date"], input[type="time"], input[type="number"], select, textarea{
+  padding:10px;border-radius:10px;border:1px solid #d8e6ee;background:#fff;color:var(--input-text);min-width:160px;font-size:13px;
+}
+textarea{min-height:80px;resize:vertical}
+.btn{padding:10px 12px;border-radius:10px;border:none;background:var(--accent);font-weight:800;cursor:pointer}
+.btn.secondary{background:transparent;border:1px solid #cfdce8}
+.small{padding:8px 10px;font-size:13px;border-radius:8px}
+.table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden}
+.table th,.table td{padding:10px;border:1px solid #eef4f8;text-align:left;font-size:13px}
+
+/* section accents */
+.section-att .panel{border-left:6px solid #000}
+.section-meet .panel{border-left:6px solid #000}
+.section-less .panel{border-left:6px solid #000}
+
+/* ensure inputs have black text */
+.section-att input, .section-att textarea, .section-att select,
+.section-meet input, .section-meet textarea, .section-meet select,
+.section-less input, .section-less textarea, .section-less select { color:#000;background:#fff;border:1px solid #c6d3df; }
+
+/* action buttons */
+.action-btn{padding:6px 10px;border-radius:8px;color:#fff;border:none;cursor:pointer}
+.edit{background:var(--success)}
+.del{background:var(--danger)}
+.link{background:#5b76ff}
+
+.hidden{display:none}
+.note{color:var(--muted);font-size:13px}
+@media (max-width:900px){ .sidebar{display:none} .app{flex-direction:column} }
+
+/* pill badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #cfe0ea;font-size:12px;color:#375a74;background:#f6fbfe}
+</style>
+</head>
+<body>
+<!-- LOGIN / REGISTER -->
+<div id="authScreen" style="position:fixed;inset:0;background:linear-gradient(180deg,#071a2b,#0a8b8b);display:flex;align-items:center;justify-content:center;z-index:999">
+  <div style="width:480px;background:rgba(255,255,255,0.06);padding:28px;border-radius:14px;color:#fff;box-shadow:0 16px 40px rgba(0,0,0,.5)">
+    <h2 style="margin:0 0 8px 0;text-align:center">Welcome to GEMS Milandhoo School Portal</h2>
+    <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px">
+        <h3 style="margin:0 0 8px 0">Login</h3>
+        <input id="loginUser" placeholder="Username" style="width:100%;padding:10px;border-radius:8px;border:none;margin-bottom:8px" />
+        <input id="loginPass" placeholder="Password" type="password" style="width:100%;padding:10px;border-radius:8px;border:none;margin-bottom:8px" />
+        <button id="btnLogin" style="width:100%;padding:10px;border-radius:8px;border:none;background:#ffd166;font-weight:800;color:#000">Login</button>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <h3 style="margin:0 0 8px 0">Register</h3>
+        <input id="regUser" placeholder="Choose username" style="width:100%;padding:10px;border-radius:8px;border:none;margin-bottom:8px" />
+        <input id="regPass" placeholder="Choose password" type="password" style="width:100%;padding:10px;border-radius:8px;border:none;margin-bottom:8px" />
+        <button id="btnRegister" style="width:100%;padding:10px;border-radius:8px;border:none;background:#4ce0c9;font-weight:800;color:#003">Register & Sign in</button>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:12px;color:rgba(255,255,255,0.8)">Use unique usernames. Data is shared across users in this browser.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appRoot" style="display:none">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2 L22 8 L17 22 L7 22 L2 8 Z" fill="white" opacity="0.12"/></svg>
+      </div>
+      <div>
+        <h1>GEMS Milandhoo</h1>
+        <div class="small-note">School Portal</div>
+      </div>
+    </div>
+
+    <nav>
+      <ul class="nav">
+        <li><button onclick="navigate('dashboard')">🏠 Dashboard</button></li>
+        <li><button onclick="navigate('students')">👥 Students</button></li>
+        <li><button onclick="navigate('attendance')">📋 Attendance</button></li>
+        <li><button onclick="navigate('meetings')">🗒️ Meeting Minutes</button></li>
+        <li><button onclick="navigate('lessons')">📚 Lesson Plans</button></li>
+        <li style="margin-top:12px"><button onclick="logout()" style="background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px;border-radius:8px">Logout</button></li>
+      </ul>
+    </nav>
+
+    <div style="margin-top:auto">
+      <div class="small-note">Logged in as</div>
+      <div id="currentUser" style="font-weight:800"></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="header">
+      <div class="title">GEMS Milandhoo School Portal</div>
+      <div class="note" id="currentTime">--</div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="card">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div class="card"><div class="big" id="totalStudents">0</div><div class="small-note">Students</div></div>
+        <div class="card"><div class="big" id="attendanceDays">0</div><div class="small-note">Attendance Days</div></div>
+        <div class="card"><div class="big" id="meetingsCount">0</div><div class="small-note">Meetings</div></div>
+        <div class="card"><div class="big" id="lessonsCount">0</div><div class="small-note">Lesson Plans</div></div>
+      </div>
+      <div class="panel" style="margin-top:12px">
+        <h3 style="margin:0 0 8px 0">Overview</h3>
+        <p class="small-note">Use the sidebar to manage Students, Attendance, Meeting Minutes and Lesson Plans. All records are saved locally and shared across users who sign in on this browser.</p>
+      </div>
+    </section>
+
+    <!-- STUDENTS -->
+    <section id="students" class="hidden">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0">Students Management</h3><div class="small-note">Add / Edit / Delete students</div></div>
+          <div id="studentEditingBadge" class="small-note hidden" style="color:#b55">Editing...</div>
+        </div>
+        <form id="studentForm" style="margin-top:12px">
+          <div class="controls">
+            <input id="stuName" placeholder="Full name" required>
+            <input id="stuAge" type="number" placeholder="Age" min="3">
+            <input id="stuGrade" placeholder="Grade">
+            <input id="stuLevel" placeholder="Level">
+            <button class="btn" type="submit">Add / Save</button>
+            <button id="cancelStudent" class="btn secondary" type="button" style="display:none" onclick="cancelEdit('student')">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div><strong>Students List</strong><div class="small-note">Search & manage students below</div></div>
+          <div class="controls">
+            <input id="studentSearch" placeholder="Search name or grade" oninput="renderStudents()">
+            <button class="small" onclick="exportStudentsCSV()">Export CSV</button>
+          </div>
+        </div>
+        <table class="table" id="studentsTable">
+          <thead><tr><th>Name</th><th>Age</th><th>Grade</th><th>Level</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ATTENDANCE -->
+    <section id="attendance" class="hidden section-att">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0">Attendance</h3><div class="small-note">Black-text fields for clarity</div></div>
+          <div class="controls">
+            <label>Start <input id="attStart" type="date"></label>
+            <label>End <input id="attEnd" type="date"></label>
+            <button class="small" onclick="loadAttendanceRange()">Load Range</button>
+            <button class="small" onclick="exportAttendanceExcel()">Export Excel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="controls">
+          <label>Date <input id="attDate" type="date"></label>
+          <button class="small" onclick="loadAttendanceForDate()">Load Students</button>
+          <button class="small" onclick="saveAttendance()">Save Attendance</button>
+          <div style="margin-left:auto;display:flex;gap:8px">
+            <button class="small" onclick="markAll('Present')">All Present</button>
+            <button class="small" onclick="markAll('Absent')">All Absent</button>
+            <button class="small" onclick="markAll('Holiday')">All Holiday</button>
+          </div>
+        </div>
+        <div class="small-note" style="margin-top:8px">Pick a date, click Load Students, mark statuses, then Save Attendance.</div>
+      </div>
+
+      <div class="panel">
+        <table class="table" id="attendanceTable">
+          <thead><tr><th>Date</th><th>Student</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MEETINGS (Pro) -->
+    <section id="meetings" class="hidden section-meet">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0">Meeting Minutes</h3><div class="small-note">Professional fields & PDF export</div></div>
+          <div class="controls">
+            <label>Start <input id="mtStart" type="date"></label>
+            <label>End <input id="mtEnd" type="date"></label>
+            <button class="small" onclick="loadMeetingsRange()">Load Range</button>
+            <button class="small" onclick="exportMeetingsRangePDF()">Export Range (PDF)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <form id="meetingForm">
+          <div class="controls">
+            <input id="mtDate" type="date" required>
+            <input id="mtStartTime" type="time" placeholder="Start time">
+            <input id="mtEndTime" type="time" placeholder="End time">
+            <input id="mtTitle" type="text" placeholder="Meeting Title" required>
+            <input id="mtLocation" type="text" placeholder="Location">
+          </div>
+          <div class="controls" style="margin-top:8px">
+            <input id="mtChair" type="text" placeholder="Lading Teacher ">
+            <select id="mtParticipants" multiple style="min-width:220px;max-height:110px;overflow:auto"></select>
+            <input id="mtParticipantsFree" type="text" placeholder="Extra participants (comma separated)">
+          </div>
+          <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <textarea id="mtAgenda" placeholder="Agenda (bullet points or text)" style="min-height:120px"></textarea>
+            <textarea id="mtDecisions" placeholder="Key Decisions" style="min-height:120px"></textarea>
+          </div>
+          <div style="margin-top:8px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><strong>Action Items</strong><span class="badge">owner + due + status</span></div>
+            <div class="controls">
+              <input id="aiText" type="text" placeholder="Action item description">
+              <input id="aiOwner" type="text" placeholder="Owner">
+              <input id="aiDue" type="date">
+              <select id="aiStatus">
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+              <button class="small" type="button" onclick="addActionItem()">Add</button>
+            </div>
+            <table class="table" id="actionsTable" style="margin-top:8px">
+              <thead><tr><th>#</th><th>Description</th><th>Owner</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn" type="submit">Add / Save Meeting</button>
+            <button id="cancelMeeting" class="btn secondary" type="button" style="display:none" onclick="cancelEdit('meeting')">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <table class="table" id="meetingsTable">
+          <thead><tr><th>Date</th><th>Title</th><th>Participants</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- LESSONS -->
+    <section id="lessons" class="hidden section-less">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0">Lesson Plans</h3><div class="small-note">Black-text fields — export to boxed template PDF</div></div>
+          <div class="controls">
+            <label>Start <input id="lsStart" type="date"></label>
+            <label>End <input id="lsEnd" type="date"></label>
+            <button class="small" onclick="loadLessonsRange()">Load Range</button>
+            <button class="small" onclick="exportLessonsPDF()">Export Lesson Plans (PDF)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <form id="lessonForm">
+          <div class="controls">
+            <input id="lsDate" type="date" required>
+            <select id="lsStudent" required style="min-width:220px"><option value="">-- choose student --</option></select>
+            <input id="lsSubject" placeholder="Subject / Course" required>
+            <input id="lsTopic" placeholder="Name of Lesson" required>
+          </div>
+
+          <div style="margin-top:10px">
+            <textarea id="lsObjectives" placeholder="Objectives / General description" style="width:100%;min-height:100px"></textarea>
+          </div>
+
+          <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap">
+            <textarea id="lsMaterials" placeholder="Materials" style="flex:1;min-width:260px"></textarea>
+            <textarea id="lsActivities" placeholder="Activities" style="flex:1;min-width:260px"></textarea>
+          </div>
+
+          <div style="margin-top:10px">
+            <textarea id="lsHomework" placeholder="Homework" style="width:100%;min-height:60px"></textarea>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button class="btn" type="submit">Add / Save Lesson</button>
+              <button id="cancelLesson" class="btn secondary" type="button" style="display:none" onclick="cancelEdit('lesson')">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <table class="table" id="lessonsTable">
+          <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Lesson</th><th>Objectives</th><th>Materials</th><th>Activities</th><th>Homework</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ------------------------------
+   Full portal JavaScript — Pro
+   ------------------------------ */
+
+/* helpers */
+const $ = id => document.getElementById(id);
+function esc(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch])); }
+function today(){ return new Date().toISOString().slice(0,10); }
+
+/* storage initialization */
+function ensureStorage(){
+  if(!localStorage.getItem('users')) {
+    const sample = {teacher1:'pass1',teacher2:'pass2',teacher3:'pass3'};
+    localStorage.setItem('users', JSON.stringify(sample));
+  }
+  if(!localStorage.getItem('portalData')){
+    localStorage.setItem('portalData', JSON.stringify({students:[], attendance:{}, meetings:[], lessons:[]}));
+  }
+}
+
+/* auth logic */
+function bindAuth(){
+  $('btnRegister').addEventListener('click', ()=>{
+    const u = $('regUser').value.trim(); const p = $('regPass').value.trim();
+    if(!u || !p) return alert('Enter username and password');
+    const users = JSON.parse(localStorage.getItem('users')||'{}');
+    if(users[u]) return alert('Username exists');
+    users[u] = p; localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('loggedInUser', u);
+    openApp(u);
+  });
+
+  $('btnLogin').addEventListener('click', ()=>{
+    const u = $('loginUser').value.trim(); const p = $('loginPass').value.trim();
+    const users = JSON.parse(localStorage.getItem('users')||'{}');
+    if(users[u] && users[u] === p){
+      localStorage.setItem('loggedInUser', u);
+      openApp(u);
+    } else alert('Invalid credentials');
+  });
+}
+
+/* open app after auth */
+function openApp(user){
+  $('authScreen').style.display = 'none';
+  document.querySelector('.app').style.display = 'flex';
+  $('currentUser').innerText = user;
+  // set default dates
+  $('attDate').value = today(); $('lsDate').value = today(); $('mtDate').value = today();
+  // show default section
+  navigate('dashboard');
+  // populate selects/tables
+  refreshAll();
+  // update clock
+  $('currentTime').innerText = new Date().toLocaleString();
+  setInterval(()=> $('currentTime').innerText = new Date().toLocaleString(), 60*1000);
+}
+
+/* navigation */
+function hideAll(){ ['dashboard','students','attendance','meetings','lessons'].forEach(s => $(s).classList.add('hidden')); }
+function navigate(section){
+  hideAll();
+  $(section).classList.remove('hidden');
+  if(section==='students') renderStudents();
+  if(section==='attendance') renderAttendanceForDate();
+  if(section==='meetings') renderMeetingsRange();
+  if(section==='lessons'){ populateStudentSelect(); renderLessonsRange(); }
+}
+
+/* logout */
+function logout(){ localStorage.removeItem('loggedInUser'); location.reload(); }
+
+/* DB helpers */
+function db(){ return JSON.parse(localStorage.getItem('portalData')||'{}'); }
+function saveDB(d){ localStorage.setItem('portalData', JSON.stringify(d)); }
+
+/* refresh summary */
+function refreshSummary(){
+  const d = db();
+  $('totalStudents').innerText = d.students.length;
+  $('attendanceDays').innerText = Object.keys(d.attendance).length;
+  $('meetingsCount').innerText = d.meetings.length;
+  $('lessonsCount').innerText = d.lessons.length;
+}
+
+/* -------------------------
+   Students
+   ------------------------- */
+let editingStudent = null;
+
+function bindStudentForm(){
+  $('studentForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const d = db();
+    const rec = {
+      name: $('stuName').value.trim(),
+      age: parseInt($('stuAge').value||'0',10),
+      grade: $('stuGrade').value.trim(),
+      level: $('stuLevel').value.trim()
+    };
+    if(!rec.name) return alert('Enter student name');
+    if(editingStudent === null) d.students.push(rec);
+    else d.students[editingStudent] = rec;
+    saveDB(d);
+    cancelEdit('student');
+    renderStudents();
+    populateStudentSelect();
+    refreshSummary();
+  });
+}
+
+function renderStudents(){
+  const d = db(); const tbody = $('studentsTable').querySelector('tbody'); tbody.innerHTML = '';
+  const q = ($('studentSearch').value||'').trim().toLowerCase();
+  d.students.forEach((s, i) => {
+    if(q && !(s.name.toLowerCase().includes(q) || (s.grade||'').toLowerCase().includes(q))) return;
+    tbody.insertAdjacentHTML('beforeend', `<tr>
+      <td>${esc(s.name)}</td><td>${s.age}</td><td>${esc(s.grade)}</td><td>${esc(s.level)}</td>
+      <td>
+        <button class="action-btn edit" onclick="editStudent(${i})">Edit</button>
+        <button class="action-btn del" onclick="deleteStudent(${i})">Delete</button>
+      </td>
+    </tr>`);
+  });
+}
+
+function editStudent(i){
+  const s = db().students[i]; if(!s) return;
+  $('stuName').value = s.name; $('stuAge').value = s.age; $('stuGrade').value = s.grade; $('stuLevel').value = s.level;
+  editingStudent = i; $('studentEditingBadge').classList.remove('hidden'); $('cancelStudent').style.display = 'inline-block';
+}
+function deleteStudent(i){ if(!confirm('Delete this student?')) return; const d = db(); d.students.splice(i,1); saveDB(d); renderStudents(); populateStudentSelect(); refreshSummary(); }
+
+function cancelEdit(type){
+  if(type==='student'){ editingStudent = null; $('studentForm').reset(); $('studentEditingBadge').classList.add('hidden'); $('cancelStudent').style.display='none'; }
+  if(type==='meeting'){ editingMeeting = null; $('meetingForm').reset(); actionItems = []; renderActionItems(); $('cancelMeeting').style.display='none'; }
+  if(type==='lesson'){ editingLesson = null; $('lessonForm').reset(); $('cancelLesson').style.display='none'; }
+}
+
+function exportStudentsCSV(){
+  const data = db(); if(!data.students.length) return alert('No students to export');
+  const rows = [['Name','Age','Grade','Level'], ...data.students.map(s=>[s.name,s.age,s.grade,s.level])];
+  const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type: 'text/csv'}), url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'students.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+/* -------------------------
+   Attendance
+   ------------------------- */
+function loadAttendanceForDate(){
+  const date = $('attDate').value; const d = db(); const tbody = $('attendanceTable').querySelector('tbody'); tbody.innerHTML = '';
+  if(!date){ tbody.innerHTML = '<tr><td colspan="3">Pick a date</td></tr>'; return; }
+  if(!d.students.length){ tbody.innerHTML = '<tr><td colspan="3">No students — add students first</td></tr>'; return; }
+  const day = d.attendance[date] || [];
+  d.students.forEach((s, idx) => {
+    const rec = day.find(r => r.student === s.name);
+    const status = rec ? rec.status : 'Present';
+    tbody.insertAdjacentHTML('beforeend', `<tr>
+      <td>${date}</td>
+      <td>${esc(s.name)}</td>
+      <td>
+        <select data-idx="${idx}" style="min-width:140px">
+          <option value="Present" ${status==='Present'?'selected':''}>Present</option>
+          <option value="Absent" ${status==='Absent'?'selected':''}>Absent</option>
+          <option value="Holiday" ${status==='Holiday'?'selected':''}>Holiday</option>
+        </select>
+      </td>
+    </tr>`);
+  });
+}
+function markAll(val){ document.querySelectorAll('#attendanceTable select').forEach(s => s.value = val); }
+function saveAttendance(){
+  const date = $('attDate').value; if(!date) return alert('Pick a date first');
+  const selects = Array.from(document.querySelectorAll('#attendanceTable select'));
+  if(selects.length === 0) return alert('Load students first');
+  const d = db();
+  d.attendance[date] = selects.map(sel => ({ student: d.students[parseInt(sel.dataset.idx,10)].name, status: sel.value }));
+  saveDB(d); alert('Attendance saved'); refreshSummary();
+}
+function loadAttendanceRange(){
+  const start = $('attStart').value, end = $('attEnd').value; const d = db(); const tbody = $('attendanceTable').querySelector('tbody'); tbody.innerHTML = '';
+  let any = false;
+  Object.keys(d.attendance).sort().forEach(date => {
+    if((!start || date>=start) && (!end || date<=end)){
+      d.attendance[date].forEach(r => { any = true; tbody.insertAdjacentHTML('beforeend', `<tr><td>${date}</td><td>${esc(r.student)}</td><td>${r.status}</td></tr>`); });
+    }
+  });
+  if(!any) tbody.innerHTML = '<tr><td colspan="3">No records in selected range.</td></tr>';
+}
+function exportAttendanceExcel(){
+  const start = $('attStart').value, end = $('attEnd').value; const d = db();
+  const rows = [];
+  Object.keys(d.attendance).sort().forEach(date => {
+    if((!start || date>=start) && (!end || date<=end)){
+      d.attendance[date].forEach(r => rows.push({ Date: date, Student: r.student, Status: r.status }));
+    }
+  });
+  if(!rows.length) return alert('No attendance records to export in selected range');
+  const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Attendance'); XLSX.writeFile(wb, 'Attendance.xlsx');
+}
+
+/* -------------------------
+   Meetings — Pro
+   ------------------------- */
+let editingMeeting = null;
+let actionItems = [];
+
+function bindMeetingForm(){
+  $('meetingForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const d = db();
+    const selected = Array.from($('mtParticipants').selectedOptions).map(o => o.value).filter(Boolean);
+    const free = $('mtParticipantsFree').value.split(',').map(s=>s.trim()).filter(Boolean);
+    const rec = {
+      date: $('mtDate').value,
+      startTime: $('mtStartTime').value,
+      endTime: $('mtEndTime').value,
+      title: $('mtTitle').value.trim(),
+      location: $('mtLocation').value.trim(),
+      participants: [...new Set([...selected,...free])],
+      agenda: $('mtAgenda').value.trim(),
+      decisions: $('mtDecisions').value.trim(),
+      actions: actionItems.slice() // copy
+    };
+    if(!rec.date || !rec.title) return alert('Date and title required');
+    if(editingMeeting === null) d.meetings.push(rec); else d.meetings[editingMeeting] = rec;
+    saveDB(d);
+    cancelEdit('meeting'); renderMeetingsRange(); refreshSummary();
+  });
+}
+
+function addActionItem(){
+  const t = $('aiText').value.trim(); const o = $('aiOwner').value.trim(); const due = $('aiDue').value; const st = $('aiStatus').value;
+  if(!t) return alert('Action item needs description');
+  actionItems.push({text:t, owner:o, due:due, status:st});
+  $('aiText').value=''; $('aiOwner').value=''; $('aiDue').value=''; $('aiStatus').value='Open';
+  renderActionItems();
+}
+function removeActionItem(idx){ actionItems.splice(idx,1); renderActionItems(); }
+function renderActionItems(){
+  const tbody = $('actionsTable').querySelector('tbody'); tbody.innerHTML='';
+  actionItems.forEach((a,i)=>{
+    tbody.insertAdjacentHTML('beforeend', `<tr>
+      <td>${i+1}</td>
+      <td>${esc(a.text)}</td>
+      <td>${esc(a.owner)}</td>
+      <td>${esc(a.due)}</td>
+      <td>${esc(a.status)}</td>
+      <td><button class="action-btn del" onclick="removeActionItem(${i})">Remove</button></td>
+    </tr>`);
+  });
+}
+
+function renderMeetingsRange(){
+  populateParticipantSelect();
+  const start = $('mtStart').value, end = $('mtEnd').value; const d = db(); const tbody = $('meetingsTable').querySelector('tbody'); tbody.innerHTML = '';
+  d.meetings.forEach((m,i) => {
+    if((!start || m.date>=start) && (!end || m.date<=end)){
+      tbody.insertAdjacentHTML('beforeend', `<tr>
+        <td>${m.date} ${m.startTime?('• '+m.startTime):''}</td>
+        <td>${esc(m.title)}</td>
+        <td>${esc((m.participants||[]).join(', '))}</td>
+        <td>
+          <button class="action-btn edit" onclick="editMeeting(${i})">Edit</button>
+          <button class="action-btn del" onclick="deleteMeeting(${i})">Delete</button>
+          <button class="action-btn link" onclick="exportSingleMeetingPDF(${i})">PDF</button>
+        </td>
+      </tr>`);
+    }
+  });
+}
+
+function populateParticipantSelect(){
+  const mtSel = $('mtParticipants'); mtSel.innerHTML='';
+  db().students.forEach(s => { const o=document.createElement('option'); o.value=s.name; o.textContent=s.name; mtSel.appendChild(o); });
+}
+
+function editMeeting(i){
+  const m = db().meetings[i]; if(!m) return;
+  $('mtDate').value = m.date; $('mtStartTime').value=m.startTime||''; $('mtEndTime').value=m.endTime||'';
+  $('mtTitle').value = m.title; $('mtLocation').value = m.location||''; $('mtChair').value=m.chair||''; $('mtRecorder').value=m.recorder||'';
+  $('mtAgenda').value = m.agenda||''; $('mtDecisions').value = m.decisions||''; $('mtParticipantsFree').value='';
+  Array.from($('mtParticipants').options).forEach(opt => opt.selected = (m.participants||[]).includes(opt.value));
+  actionItems = (m.actions||[]).slice(); renderActionItems();
+  editingMeeting = i; $('cancelMeeting').style.display = 'inline-block';
+}
+function deleteMeeting(i){ if(!confirm('Delete this meeting?')) return; const d = db(); d.meetings.splice(i,1); saveDB(d); renderMeetingsRange(); refreshSummary(); }
+
+/* PDF helpers */
+function hdr(doc, title){
+  doc.setFillColor(6,40,61); doc.rect(0,0,210,20,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('GEMS Milandhoo School', 14, 13);
+  doc.setFontSize(11); doc.text(title, 196, 13, {align:'right'});
+  doc.setTextColor(0,0,0);
+}
+function ftr(doc){
+  const pageCount = doc.internal.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFontSize(9); doc.setTextColor(120);
+    doc.text(`Page ${i} / ${pageCount}`, 196, 290, {align:'right'});
+    doc.text(new Date().toLocaleString(), 14, 290);
+  }
+}
+
+function kvGrid(doc, rows, x=14, y=28, colW=46, valW=140){
+  doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  rows.forEach(([k,v], idx)=>{
+    const yy = y + idx*8;
+    doc.setDrawColor(225);
+    doc.rect(x, yy-6, colW, 8); doc.rect(x+colW, yy-6, valW, 8);
+    doc.text(String(k||'-'), x+2, yy);
+    doc.setFont('helvetica','normal');
+    doc.text(String(v||'-'), x+colW+2, yy, {maxWidth: valW-4});
+    doc.setFont('helvetica','bold');
+  });
+  return y + rows.length*8;
+}
+
+/* Single Meeting PDF */
+function exportSingleMeetingPDF(index){
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({unit:'mm', format:'a4'});
+  const m = db().meetings[index]; if(!m) return alert('Meeting not found');
+  hdr(doc, 'Meeting Minutes');
+
+  // Meta grid
+  let y = kvGrid(doc,[
+    ['Title', m.title],
+    ['Date', m.date],
+    ['Time', (m.startTime||'') + (m.endTime?(' — '+m.endTime):'')],
+    ['Location', m.location||'-'],
+    ['Participants', (m.participants||[]).join(', ')||'-']
+  ]);
+
+  y += 6; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Agenda', 14, y); y += 2;
+  doc.setDrawColor(220); doc.rect(14, y+2, 182, 32);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text(m.agenda||'-', 16, y+8, {maxWidth:178}); y += 40;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Key Decisions', 14, y); y += 2;
+  doc.setDrawColor(220); doc.rect(14, y+2, 182, 32);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text(m.decisions||'-', 16, y+8, {maxWidth:178}); y += 40;
+
+  // Action items table
+  const actions = (m.actions||[]).map((a,i)=>({
+    '#': i+1,
+    Description: a.text||'-',
+    Owner: a.owner||'-',
+    Due: a.due||'-',
+    Status: a.status||'-'
+  }));
+  if(actions.length){
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Action Items', 14, y);
+    y += 4;
+    doc.autoTable({
+      startY: y,
+      head: [['#','Description','Owner','Due','Status']],
+      body: actions.map(a=>[a['#'], a.Description, a.Owner, a.Due, a.Status]),
+      styles: {fontSize:10, cellPadding:2},
+      headStyles:{fillColor:[6,40,61]},
+      theme:'striped',
+      margin:{left:14, right:14}
+    });
+    y = doc.lastAutoTable.finalY + 4;
+  }
+
+  // Signature block
+  y += 10; doc.setDrawColor(0);
+  doc.line(14, y, 94, y); doc.text('Leading Teacher Signature ', 14, y+5);
+
+  ftr(doc);
+  doc.save(`Meeting_${m.date}_${(m.title||'').slice(0,24).replace(/[^a-z0-9]+/gi,'_')}.pdf`);
+}
+
+/* Range export */
+function exportMeetingsRangePDF(){
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({unit:'mm', format:'a4'});
+  const start = $('mtStart').value, end = $('mtEnd').value; const items = db().meetings.filter(m => (!start || m.date>=start) && (!end || m.date<=end));
+  if(!items.length) return alert('No meetings in range');
+
+  items.forEach((m, idx) => {
+    if(idx>0) doc.addPage();
+    hdr(doc, 'Meeting Minutes');
+    let y = kvGrid(doc,[
+      ['Title', m.title],
+      ['Date', m.date],
+      ['Time', (m.startTime||'') + (m.endTime?(' — '+m.endTime):'')],
+      ['Location', m.location||'-'],
+      ['Chair', m.chair||'-'],
+      ['Recorder', m.recorder||'-'],
+      ['Participants', (m.participants||[]).join(', ')||'-']
+    ]);
+
+    y += 6; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Agenda', 14, y); y += 4;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    const agendaY = doc.splitTextToSize(m.agenda||'-', 180);
+    doc.text(agendaY, 14, y); y += Math.min(agendaY.length*5, 40);
+
+    y += 2; doc.setFont('helvetica','bold'); doc.text('Key Decisions', 14, y); y += 4;
+    doc.setFont('helvetica','normal'); const decY = doc.splitTextToSize(m.decisions||'-', 180);
+    doc.text(decY, 14, y); y += Math.min(decY.length*5, 40);
+
+    const actions = (m.actions||[]).map((a,i)=>({ '#': i+1, Description:a.text||'-', Owner:a.owner||'-', Due:a.due||'-', Status:a.status||'-'}));
+    if(actions.length){
+      y += 2; doc.setFont('helvetica','bold'); doc.text('Action Items', 14, y); y += 2;
+      doc.autoTable({
+        startY: y,
+        head: [['#','Description','Owner','Due','Status']],
+        body: actions.map(a=>[a['#'], a.Description, a.Owner, a.Due, a.Status]),
+        styles:{fontSize:10, cellPadding:2},
+        headStyles:{fillColor:[6,40,61]},
+        theme:'striped',
+        margin:{left:14, right:14}
+      });
+    }
+  });
+
+  ftr(doc);
+  doc.save('Meeting_Minutes_Range.pdf');
+}
+
+/* -------------------------
+   Lessons
+   ------------------------- */
+let editingLesson = null;
+
+function bindLessonForm(){
+  $('lessonForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const d = db();
+    const rec = {
+      date: $('lsDate').value,
+      student: $('lsStudent').value.trim(),
+      subject: $('lsSubject').value.trim(),
+      topic: $('lsTopic').value.trim(),
+      objectives: $('lsObjectives').value.trim(),
+      materials: $('lsMaterials').value.trim(),
+      activities: $('lsActivities').value.trim(),
+      homework: $('lsHomework').value.trim()
+    };
+    if(!rec.date || !rec.student || !rec.subject || !rec.topic) return alert('Date, Student, Subject and Lesson Name required');
+    if(editingLesson === null) d.lessons.push(rec); else d.lessons[editingLesson] = rec;
+    saveDB(d);
+    cancelEdit('lesson'); renderLessonsRange(); refreshSummary();
+  });
+}
+
+function populateStudentSelect(){
+  const sel = $('lsStudent'); sel.innerHTML = '<option value="">-- choose student --</option>';
+  db().students.forEach(s => { const opt = document.createElement('option'); opt.value = s.name; opt.textContent = s.name; sel.appendChild(opt); });
+}
+
+function renderLessonsRange(){
+  const start = $('lsStart').value, end = $('lsEnd').value; const d = db(); const tbody = $('lessonsTable').querySelector('tbody'); tbody.innerHTML = '';
+  d.lessons.forEach((l, i) => {
+    if((!start || l.date>=start) && (!end || l.date<=end)){
+      tbody.insertAdjacentHTML('beforeend', `<tr>
+        <td>${l.date}</td><td>${esc(l.student)}</td><td>${esc(l.subject)}</td><td>${esc(l.topic)}</td>
+        <td>${esc(l.objectives)}</td><td>${esc(l.materials)}</td><td>${esc(l.activities)}</td><td>${esc(l.homework)}</td>
+        <td>
+          <button class="action-btn edit" onclick="editLesson(${i})">Edit</button>
+          <button class="action-btn del" onclick="deleteLesson(${i})">Delete</button>
+        </td>
+      </tr>`);
+    }
+  });
+}
+
+function editLesson(i){
+  const l = db().lessons[i]; if(!l) return;
+  $('lsDate').value = l.date; $('lsStudent').value = l.student; $('lsSubject').value = l.subject; $('lsTopic').value = l.topic;
+  $('lsObjectives').value = l.objectives; $('lsMaterials').value = l.materials; $('lsActivities').value = l.activities; $('lsHomework').value = l.homework;
+  editingLesson = i; $('cancelLesson').style.display = 'inline-block';
+}
+function deleteLesson(i){ if(!confirm('Delete this lesson?')) return; const d = db(); d.lessons.splice(i,1); saveDB(d); renderLessonsRange(); refreshSummary(); }
+
+function exportLessonsPDF(){
+  const { jsPDF } = window.jspdf;
+  const start = $('lsStart').value, end = $('lsEnd').value;
+  const items = db().lessons.filter(l => (!start || l.date>=start) && (!end || l.date<=end));
+  if(!items.length) return alert('No lessons to export in range');
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  items.forEach((l, idx) => { if(idx>0) doc.addPage(); drawLessonTemplate(doc, l); });
+  doc.save('Lesson_Plans.pdf');
+}
+
+function drawLessonTemplate(doc, l){
+  hdr(doc, 'Lesson Plan');
+  const LM = 14, RM = 196; let y = 28;
+
+  // Basic info box
+  doc.rect(LM, y, RM-LM, 32);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.rect(LM, y, 52, 16); doc.text('Subject', LM+4, y+11);
+  doc.rect(LM+52, y, RM-LM-52, 16); doc.text(l.subject || '-', LM+56, y+11);
+  doc.rect(LM, y+16, 52, 16); doc.text('Name of Lesson', LM+4, y+28);
+  doc.rect(LM+52, y+16, RM-LM-52, 16); doc.text(l.topic || '-', LM+56, y+28);
+  y += 40;
+
+  // Description & objectives box
+  const boxH = 150; doc.rect(LM, y, RM-LM, boxH);
+  doc.rect(LM, y, 52, boxH/2); doc.text('General Description', LM+4, y+10);
+  doc.rect(LM, y+boxH/2, 52, boxH/2); doc.text('Objective(s)', LM+4, y+boxH/2+10);
+
+  const RX = LM+52, RW = RM-RX; doc.rect(RX, y, RW, boxH/2);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  const descLines = doc.splitTextToSize(l.objectives || '-', RW-6);
+  let cy = y + 10; descLines.forEach(line => { doc.text(line, RX+3, cy); cy += 5; if(cy > 280){ doc.addPage(); cy = 20; } });
+
+  doc.rect(RX, y+boxH/2, RW, boxH/2);
+  let ry = y+boxH/2 + 8;
+  doc.setFont('helvetica','bold'); doc.text('Materials:', RX+3, ry); ry += 5;
+  doc.setFont('helvetica','normal'); ry = writeWrapped(doc, l.materials || '-', RX+3, ry, RW-6) + 4;
+  doc.setFont('helvetica','bold'); doc.text('Activities:', RX+3, ry); ry += 5;
+  doc.setFont('helvetica','normal'); ry = writeWrapped(doc, l.activities || '-', RX+3, ry, RW-6) + 4;
+  doc.setFont('helvetica','bold'); doc.text('Homework:', RX+3, ry); ry += 5;
+  doc.setFont('helvetica','normal'); writeWrapped(doc, l.homework || '-', RX+3, ry, RW-6);
+
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text(`Date: ${l.date || '-'}`, LM, 285);
+  doc.text(`Student: ${l.student || '-'}`, 110, 285);
+  ftr(doc);
+}
+
+function writeWrapped(doc, text, x, y, maxW){
+  const lines = doc.splitTextToSize(text, maxW);
+  let cy = y;
+  lines.forEach(line => { doc.text(line, x, cy); cy += 5; if(cy > 280){ doc.addPage(); cy = 20; } });
+  return cy;
+}
+
+/* -------------------------
+   Initialization & binding
+   ------------------------- */
+function refreshAll(){ refreshSummary(); renderStudents(); populateStudentSelect(); renderMeetingsRange(); renderLessonsRange(); }
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  ensureStorage();
+  bindAuth();
+  bindStudentForm();
+  bindMeetingForm();
+  bindLessonForm();
+
+  $('attDate').value = today(); $('lsDate').value = today(); $('mtDate').value = today();
+
+  const logged = localStorage.getItem('loggedInUser');
+  if(logged){ openApp(logged); }
+
+  // expose globals for inline buttons
+  window.navigate = navigate;
+  window.logout = logout;
+
+  window.loadAttendanceForDate = loadAttendanceForDate;
+  window.markAll = markAll;
+  window.saveAttendance = saveAttendance;
+  window.loadAttendanceRange = loadAttendanceRange;
+  window.exportAttendanceExcel = exportAttendanceExcel;
+
+  window.renderMeetingsRange = renderMeetingsRange;
+  window.editMeeting = editMeeting;
+  window.deleteMeeting = deleteMeeting;
+  window.exportMeetingsRangePDF = exportMeetingsRangePDF;
+  window.exportSingleMeetingPDF = exportSingleMeetingPDF;
+
+  window.renderLessonsRange = renderLessonsRange;
+  window.populateStudentSelect = populateStudentSelect;
+  window.editLesson = editLesson;
+  window.deleteLesson = deleteLesson;
+  window.exportLessonsPDF = exportLessonsPDF;
+
+  window.addActionItem = addActionItem;
+  window.removeActionItem = removeActionItem;
+});
+</script>
+</body>
+</html>
